@@ -1,6 +1,6 @@
 *.ipynb
 *.pt
 *.csv
-temp.py
+temp*.py
 *.pkl
 *.mp4

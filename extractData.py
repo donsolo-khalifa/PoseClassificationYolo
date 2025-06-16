@@ -5,7 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 
 # Initialize YOLOPose model
-model = YOLO('yolo11n-pose.pt')  # replace with correct pose weights
+model = YOLO('yolo11x-pose.pt')  # replace with correct pose weights
 
 output_csv = 'coords.csv'
 # Prepare CSV headers
@@ -17,24 +17,40 @@ if not os.path.exists(output_csv):
         writer = csv.writer(f)
         writer.writerow(fields)
 
-class_name = 'Rapha'  # change per recording
+class_name = 'Lewa'  # change per recording
 
 cap = cv2.VideoCapture(0)
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
-    results = model(frame, stream=True, conf=0.5)
+    results = model(frame, stream=True, conf=0.5,verbose=False)
     for res in results:
         annotated_frame = res.plot()
 
-        kpts = res.keypoints.data  # shape (17,3)
+        kpts = res.keypoints.data[0]  # shape (17,3)
         if kpts is None:
             continue
         row = [class_name] + kpts.flatten().tolist()
+
+        # row = [class_name] + [[int(x),int(y),round(c, 2) ]for x,y,c in kpts.cpu().numpy()]
+
+        # per_point = [[int(x), int(y), round(c, 2)] for x, y, c in kpts.cpu().numpy()]
+        # row = [class_name] + sum(per_point, [])
+
+        print(row)
+
+
+        # for x, y, c in kpts.cpu().numpy():
+        #     row = [class_name] +[int(x),int(y),round(c, 2)]
+        #     cv2.circle(frame, (int(x), int(y)), 4, (0,255,0), -1)
+        #
+        #     print(row)
+
         with open(output_csv, 'a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(row)
+
         # draw keypoints
         # for x, y, c in kpts:
         #     cv2.circle(frame, (int(x), int(y)), 4, (0,255,0), -1)
